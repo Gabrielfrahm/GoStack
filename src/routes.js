@@ -1,16 +1,21 @@
 import { Router } from 'express';
 // importando a Router do express para que possamos utilizar em outro arquivo
-import User from './app/models/User';
+import authMiddlaware from './app/middlewares/auth'; // importando o middleware de verificação de login
+
+import UserController from './app/controllers/UserController';
+import SessionController from './app/controllers/SessionController';
 
 const routes = new Router(); // instanciando o Router em uma variavel
 
-routes.get('/', async (req, res) => {
-  const user = await User.create({
-    name: 'gabriel marques',
-    email: 'gabriel_frahm@teste.com',
-    password_hash: '1234',
-  });
-  res.json(user);
+routes.get('/users', (req, res) => {
+  res.json('reste');
 });
+
+routes.post('/users', UserController.store);
+routes.post('/session', SessionController.store);
+
+routes.use(authMiddlaware); // tudo que estiver apos essa linha deve estar logado para ser acessado
+
+routes.put('/users', UserController.update); // atulizar user
 
 export default routes; // exportando a variavel para que possa ser lido no App.js
