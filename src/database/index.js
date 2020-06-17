@@ -1,8 +1,10 @@
 import Sequelize from 'sequelize'; // importando o Sequelize
 import databaseConfig from '../config/database'; // importando as configurações do banco
 import User from '../app/models/User'; // importando o model de User
+import File from '../app/models/File'; // importando o model de File
+import Appointment from '../app/models/Appointment'; // importando o model de Appointment
 
-const models = [User]; // contante que vai ser utizlida  para armazenar todos os models importados em um array
+const models = [User, File, Appointment]; // contante que vai ser utizlida  para armazenar todos os models importados em um array
 
 // criação da classe Databas
 class Database {
@@ -14,7 +16,11 @@ class Database {
   init() {
     this.connection = new Sequelize(databaseConfig); // fazendo a coneção com o banco
 
-    models.map((model) => model.init(this.connection)); // percorrendo os models
+    models
+      .map((model) => model.init(this.connection)) // percorrendo os models
+      .map(
+        (model) => model.associate && model.associate(this.connection.models) // novo map para  percorrer o model
+      );
   }
 }
 
