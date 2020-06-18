@@ -1,4 +1,5 @@
 import Sequelize from 'sequelize'; // importando o Sequelize
+import mongoose from 'mongoose'; // orm do mongoDB
 import databaseConfig from '../config/database'; // importando as configurações do banco
 import User from '../app/models/User'; // importando o model de User
 import File from '../app/models/File'; // importando o model de File
@@ -11,6 +12,7 @@ class Database {
   // metodo construtur sera criado toda a vez que a classe for  chamada
   constructor() {
     this.init(); // metodo init
+    this.mongo();
   }
 
   init() {
@@ -21,6 +23,18 @@ class Database {
       .map(
         (model) => model.associate && model.associate(this.connection.models) // novo map para  percorrer o model
       );
+  }
+
+  mongo() {
+    // conexão com o mongo
+    this.mongoConnection = mongoose.connect(
+      'mongodb://localhost:27017/gobarber',
+      {
+        useNewUrlParser: true, // configuração necessaria
+        useFindAndModify: true, // configuração necessaria
+        useUnifiedTopology: true, // configuração necessaria
+      }
+    );
   }
 }
 

@@ -1,8 +1,40 @@
 import * as Yup from 'yup'; // importação do Yup para validações
+import { startOfHour, parseISO, isBefore, format } from 'date-fns'; // metodos para pegar a hora atual, comparar se a hora atual do envento ja nao passou
+import pt from 'date-fns/locale/pt'; // para poder formatar os  linguagem em portugues
 import Appointment from '../models/Appointment'; // import do modal dos Appointment
 import User from '../models/User'; // importaçõa do modal dos User
+import File from '../models/File'; // importaçõa do modal dos file
+import Notification from '../schemas/Notifications';
 
 class AppointController {
+  // metodo para listar o Appointments
+  async index(req, res) {
+    const { page } = req.query; // pega a pagina para exibito os Appointment
+    // constante que procura todos os Appointments no banco com o mesmo id do solicitado, ordena pela data
+    const appointments = await Appointment.findAll({
+      where: { user_id: req.Id, canceled_at: null }, // no caso a data de cancelamento nao pode existir
+      order: ['date'], // ordena pela data
+      attributes: ['id', 'date'], // apresenta apenas o id e data
+      limit: 20, // limite de 20
+      offset: (page - 1) * 20, // paginação
+      include: [
+        {
+          model: User, // model de usuario
+          as: 'provider', // apelido
+          attributes: ['id', 'name'], // retorna apenas o id e o nome do provider
+          include: [
+            {
+              model: File, // model de arquivos, nesse caso apenas o avatar
+              as: 'avatar', // apelido
+              attributes: ['id', 'path', 'url'], // retorna apenas id, o caminho do arquivo para montar a url
+            },
+          ],
+        },
+      ],
+    });
+    return res.json(appointments); // resposta da chamada
+  }
+
   async store(req, res) {
     const schema = Yup.object().shape({
       provider_id: Yup.number().required(), // trazendo o id da provider
@@ -25,11 +57,41 @@ class AppointController {
         .status(401)
         .json({ error: 'You cant only create appointments with  providers' });
     }
+
+    // checando se a data do evento ja nao passou
+    const hourStart = startOfHour(parseISO(date));
+
+    if (isBefore(hourStart, new Date())) {
+      return res.status(400).json({ error: 'Past date are not permitted' });
+    }
+    // vendo de o provider ja nao tem um evento marcado esea hora
+    const isAvailability = await Appointment.findOne({
+      where: { provider_id, canceled_at: null, date: hourStart },
+    });
+
+    if (isAvailability) {
+      return res
+        .status(400)
+        .json({ error: 'Appointment date is not available' });
+    }
+
     // caso passe na verificação, efetua o cadastro no banco
     const appointment = await Appointment.create({
       user_id: req.Id, // Id vem do auth middleware (token)
       provider_id,
       date,
+    });
+
+    // notificar novo serviço
+    const user = await User.findByPk(req.Id); //  encontra o usuario pelo id
+    // formata a data atual da requisição onde dd é dia MMMM mes por extenso  e H:mm hora e minutos
+    const formattedDate = format(hourStart, "dd 'de' MMMM', às' H:mm'h'", {
+      locale: pt, // linguagem em pt
+    });
+    // cria no mongoDB
+    await Notification.create({
+      content: `Novo agendamento de ${user.name} para dia ${formattedDate}`,
+      user: provider_id,
     });
     // retorna os campos
     return res.json(appointment);
