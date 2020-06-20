@@ -57,6 +57,9 @@ class AppointController {
         .status(401)
         .json({ error: 'You cant only create appointments with  providers' });
     }
+    if (provider_id === req.Id) {
+      return res.status(401).json({ error: 'Provider is  igual User' });
+    }
 
     // checando se a data do evento ja nao passou
     const hourStart = startOfHour(parseISO(date));

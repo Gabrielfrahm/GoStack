@@ -11,6 +11,7 @@ import FileController from './app/controllers/FileController';
 import ProviderController from './app/controllers/ProviderController';
 import AppointmentController from './app/controllers/AppointmentController';
 import ScheduleController from './app/controllers/ScheduleController';
+import NotificationController from './app/controllers/NotificationController';
 
 const routes = new Router(); // instanciando o Router em uma variavel
 const upload = multer(multerConfig);
@@ -34,5 +35,8 @@ routes.post('/appointments', AppointmentController.store); // rota para agendar 
 routes.get('/schedule', ScheduleController.index); // rota para listar a agenda de cara provider
 
 routes.post('/files', upload.single('file'), FileController.store); // rota para enviar os arquivos para o banco
+
+routes.get('/notification', NotificationController.index); // rota para listar as notificações
+routes.put('/notification/:id', NotificationController.update); // rota para marca como lido as notificações
 
 export default routes; // exportando a variavel para que possa ser lido no App.js
