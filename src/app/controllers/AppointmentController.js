@@ -1,5 +1,5 @@
 import * as Yup from 'yup'; // importação do Yup para validações
-import { startOfHour, parseISO, isBefore, format } from 'date-fns'; // metodos para pegar a hora atual, comparar se a hora atual do envento ja nao passou
+import { startOfHour, parseISO, isBefore, format, subHours } from 'date-fns'; // metodos para pegar a hora atual, comparar se a hora atual do envento ja nao passou
 import pt from 'date-fns/locale/pt'; // para poder formatar os  linguagem em portugues
 import Appointment from '../models/Appointment'; // import do modal dos Appointment
 import User from '../models/User'; // importaçõa do modal dos User
@@ -97,6 +97,30 @@ class AppointController {
       user: provider_id,
     });
     // retorna os campos
+    return res.json(appointment);
+  }
+
+  // metodo para cancelar um agendamento
+  async delete(req, res) {
+    const appointment = await Appointment.findByPk(req.params.id); // recebe o id do appointment
+    // compara para ver se o appoint id é igual ao o do usuario que cadastrou, caso o contrario ele nao permite
+    if (appointment.user_id !== req.Id) {
+      return res.status(401).json({
+        error: "You Can't have permission to cancel this appointment.",
+      });
+    }
+    const dataWithSub = subHours(appointment.date, 2); // contante que retorna 2 horas antes da data cadastrada para poder fazer a verificação
+    // caso o solicitante da ação tente cancelar um appointment depois de duas horas antes do evento não sera permitido
+    if (isBefore(dataWithSub, new Date())) {
+      return res.status(401).json({
+        error: 'you cant Only  cancel appointments 2 hours in advance.',
+      });
+    }
+    // marca a data do cancelamento para a data atual
+    appointment.canceled_at = new Date();
+    // salva no banco de dados
+    await appointment.save();
+    // retorna as informações de cancelado
     return res.json(appointment);
   }
 }

@@ -31,6 +31,7 @@ routes.get('/providers', ProviderController.index); // rota para listar os prest
 
 routes.get('/appointments', AppointmentController.index); // rota para listar appointments
 routes.post('/appointments', AppointmentController.store); // rota para agendar appointments
+routes.delete('/appointments/:id', AppointmentController.delete); // rota para cancelar  as notificações
 
 routes.get('/schedule', ScheduleController.index); // rota para listar a agenda de cara provider
 
