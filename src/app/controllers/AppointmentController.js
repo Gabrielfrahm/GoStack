@@ -6,6 +6,9 @@ import User from '../models/User'; // importaçõa do modal dos User
 import File from '../models/File'; // importaçõa do modal dos file
 import Notification from '../schemas/Notifications';
 
+import CancellationMail from '../jobs/CancellationMail';
+import Queue from '../../lib/Queue'; // importa os emails
+
 class AppointController {
   // metodo para listar o Appointments
   async index(req, res) {
@@ -102,7 +105,21 @@ class AppointController {
 
   // metodo para cancelar um agendamento
   async delete(req, res) {
-    const appointment = await Appointment.findByPk(req.params.id); // recebe o id do appointment
+    const appointment = await Appointment.findByPk(req.params.id, {
+      // incluindo as informações do usuario
+      include: [
+        {
+          model: User, // model do user
+          as: 'provider', // apelido dos providers
+          attributes: ['name', 'email'], // informações que quero dos providers
+        },
+        {
+          model: User,
+          as: 'user',
+          attributes: ['name'],
+        },
+      ],
+    }); // recebe o id do appointment
     // compara para ver se o appoint id é igual ao o do usuario que cadastrou, caso o contrario ele nao permite
     if (appointment.user_id !== req.Id) {
       return res.status(401).json({
@@ -120,6 +137,10 @@ class AppointController {
     appointment.canceled_at = new Date();
     // salva no banco de dados
     await appointment.save();
+    // metodo de envio de email, recebendo informações do solicitante
+    await Queue.add(CancellationMail.key, {
+      appointment,
+    });
     // retorna as informações de cancelado
     return res.json(appointment);
   }
