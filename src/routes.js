@@ -12,6 +12,7 @@ import ProviderController from './app/controllers/ProviderController';
 import AppointmentController from './app/controllers/AppointmentController';
 import ScheduleController from './app/controllers/ScheduleController';
 import NotificationController from './app/controllers/NotificationController';
+import AvailableController from './app/controllers/AvailableController';
 
 const routes = new Router(); // instanciando o Router em uma variavel
 const upload = multer(multerConfig);
@@ -28,6 +29,7 @@ routes.use(authMiddlaware); // tudo que estiver apos essa linha deve estar logad
 routes.put('/users', UserController.update); // atulizar user
 
 routes.get('/providers', ProviderController.index); // rota para listar os prestadores de serviços
+routes.get('/providers/:providerId/available', AvailableController.index); // rota para listar os horarios disponiveis
 
 routes.get('/appointments', AppointmentController.index); // rota para listar appointments
 routes.post('/appointments', AppointmentController.store); // rota para agendar appointments

@@ -17,7 +17,7 @@ class AppointController {
     const appointments = await Appointment.findAll({
       where: { user_id: req.Id, canceled_at: null }, // no caso a data de cancelamento nao pode existir
       order: ['date'], // ordena pela data
-      attributes: ['id', 'date'], // apresenta apenas o id e data
+      attributes: ['id', 'date', 'past', 'cancelable'], // apresenta apenas o id e data
       limit: 20, // limite de 20
       offset: (page - 1) * 20, // paginação
       include: [

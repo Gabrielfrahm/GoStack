@@ -10,7 +10,7 @@ class File extends Model {
         url: {
           type: Sequelize.VIRTUAL, // tipo nao constado na bd
           get() {
-            return `http://localhost:3333/files/${this.path}`; // url exibida para o front end exibir a imagem de avata
+            return `${process.env.APP_URL}/files/${this.path}`; // url exibida para o front end exibir a imagem de avata
           },
         },
       },
